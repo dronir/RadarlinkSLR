@@ -16,37 +16,71 @@ def multiply_values(D):
 
 # Transmission values of elements in the transmit optics. These are all multiplied
 # to get the total transmission eta_t.
-transmit_optical_parameters = {
-    "TM1" : 1.00000,
-    "TM2" : 0.99995,
-    "TM3" : 0.99995,
-    "BEx1" : 0.99900,
-    "TM4" : 0.99995,
-    "TM5" : 0.99000,
-    "CW1" : 0.99900,
-    "CM1" : 0.99000,
-    "CM2" : 0.99000,
-    "CM3" : 0.99000,
-    "CM4" : 0.99000,
-    "CM5" : 0.99000,
-    "BEx2" : 0.99900,
-    "CW2" : 0.99900
-}
+def get_eta_t():
+    transmit_optics = {
+        "TM1" : 1.00000,
+        "TM2" : 0.99995,
+        "TM3" : 0.99995,
+        "BEx1" : 0.99900,
+        "TM4" : 0.99995,
+        "TM5" : 0.99000,
+        "CW1" : 0.99900,
+        "CM1" : 0.99000,
+        "CM2" : 0.99000,
+        "CM3" : 0.99000,
+        "CM4" : 0.99000,
+        "CM5" : 0.99000,
+        "BEx2" : 0.99900,
+        "CW2" : 0.99900
+    }
+    return multiply_values(transmit_optics)
 
 # Transmission values of elements in the receive optics. These are all multiplied
 # to get the total transmission eta_r.
 # The bandpass filter value is 0.9 for the night filter and 0.6 for the daytime filter.
-receive_optical_parameters = {
-    "telW" : 0.999,
-    "primM" : 0.960,
-    "secM" : 0.950,
-    "detBoxW" : 0.999,
-    "coll" : 0.999,
-    "DichM1" : 0.990,
-    "bandpass" : 0.900, # Or 0.600 for daytime
-    "NDfilter" : 0.999
+def get_eta_r(night=True):
+    receive_optics = {
+        "telW" : 0.999,
+        "primM" : 0.960,
+        "secM" : 0.960,
+        "detBoxW" : 0.999,
+        "coll" : 0.999,
+        "DichM1" : 0.990,
+        "bandpass" : 0.900 if night else 0.600,
+        "NDfilter" : 0.999
+    }
+    return multiply_values(receive_optics)
+
+
+# Atmospheric values
+Ta_values = {
+    "green" : ({
+        "very clear" : 0.95,
+        "standard" : 0.84,
+        "clear" : 0.72,
+        "light haze" : 0.59
+    }, 0.15),
+    "IR" : ({
+        "very clear" : 1.04,
+        "standard" : 0.93,
+        "clear" : 0.82,
+        "light haze" : 0.54
+    }, 0.07)
 }
 
+# Atmospheric transmission function maker
+def T_atmos_func(wavelength, condition):
+    T0 = Ta_values[wavelength][0][condition]
+    dT = Ta_values[wavelength][1]
+    def f(theta):
+        return atmospheric_transmittance(T0, dT, theta)
+    return f
+
+
+# Cirrus function
+def cirrus_transmittance(t, theta_z):
+    theta_z *= pi/180
+    return exp(-0.14 * (t / cos(theta_z))**2)
 
 
 # Compute slant range from station height, target altitude and zenith angle of target.
