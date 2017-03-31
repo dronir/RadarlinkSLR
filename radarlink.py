@@ -52,6 +52,14 @@ def get_eta_r(night=True):
     return multiply_values(receive_optics)
 
 
+# Atmospheric transmission
+# These is done with slightly too clever functional tricks.
+
+# Atmospheric transmission function
+def atmospheric_transmittance(T0, delta, theta_z):
+    theta_z *= pi/180
+    return T0 - delta / cos(theta_z)
+
 # Atmospheric values
 Ta_values = {
     "green" : ({
